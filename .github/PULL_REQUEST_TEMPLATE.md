@@ -13,7 +13,6 @@
 - [ ] Performance improvement
 - [ ] Code refactoring
 - [ ] Security fix
-- [ ] CI/CD improvement
 - [ ] Dependency update
 
 ## Related Issues

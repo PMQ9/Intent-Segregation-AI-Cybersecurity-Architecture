@@ -640,7 +640,6 @@ Always test:
 ### PR Review Process
 
 1. **Automated checks** must pass:
-   - CI/CD pipeline
    - Code formatting
    - Linting
    - Tests

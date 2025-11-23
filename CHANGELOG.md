@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 ### Removed
+- Removed all CI/CD workflows (ci.yml, docker.yml, docs.yml, release.yml, security.yml)
+  - Workflows were not functioning properly and consuming excessive resources
+  - CI/CD documentation files removed (CICD_SETUP_SUMMARY.md, .github/WORKFLOWS_QUICK_REFERENCE.md)
+  - CI/CD references removed from CLAUDE.md, CONTRIBUTING.md, and PR template
+  - Can be re-added later once issues are resolved
 
 ### Fixed
 

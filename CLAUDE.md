@@ -87,9 +87,6 @@ cargo clippy
 
 # Clippy with warnings as errors
 cargo clippy -- -D warnings
-
-# Auto-fix clippy suggestions
-cargo clippy --fix
 ```
 
 ### Database Management
