@@ -16,7 +16,7 @@ regex.workspace = true
 async-trait = "0.1"
 chrono.workspace = true
 uuid.workspace = true
-md5 = "0.7"
+md5 = "0.8"
 
 [dev-dependencies]
 tracing-subscriber.workspace = true
