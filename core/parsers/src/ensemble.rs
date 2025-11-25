@@ -1,4 +1,7 @@
+use crate::chatgpt::ChatGPTParser;
+use crate::claude::ClaudeParser;
 use crate::config::ParserConfig;
+use crate::deepseek::DeepSeekParser;
 use crate::deterministic::DeterministicParser;
 use crate::ollama::OllamaParser;
 use crate::openai::OpenAIParser;
@@ -44,6 +47,21 @@ impl EnsembleResult {
         self.results.iter().find(|r| r.parser_id == "openai_v1")
     }
 
+    /// Get the result from the ChatGPT parser if available
+    pub fn get_chatgpt(&self) -> Option<&ParsedIntent> {
+        self.results.iter().find(|r| r.parser_id == "chatgpt_v1")
+    }
+
+    /// Get the result from the DeepSeek parser if available
+    pub fn get_deepseek(&self) -> Option<&ParsedIntent> {
+        self.results.iter().find(|r| r.parser_id == "deepseek_v1")
+    }
+
+    /// Get the result from the Claude parser if available
+    pub fn get_claude(&self) -> Option<&ParsedIntent> {
+        self.results.iter().find(|r| r.parser_id == "claude_v1")
+    }
+
     /// Get the highest confidence result
     pub fn get_highest_confidence(&self) -> Option<&ParsedIntent> {
         self.results
@@ -51,11 +69,14 @@ impl EnsembleResult {
             .max_by(|a, b| a.confidence.partial_cmp(&b.confidence).unwrap())
     }
 
-    /// Get result by parser ID priority (deterministic > ollama > openai)
+    /// Get result by parser ID priority (deterministic > ollama > openai > chatgpt > deepseek > claude)
     pub fn get_by_priority(&self) -> Option<&ParsedIntent> {
         self.get_deterministic()
             .or_else(|| self.get_ollama())
             .or_else(|| self.get_openai())
+            .or_else(|| self.get_chatgpt())
+            .or_else(|| self.get_deepseek())
+            .or_else(|| self.get_claude())
     }
 }
 
@@ -82,6 +103,21 @@ impl ParserEnsemble {
         // Add OpenAI parser
         if config.enable_openai {
             parsers.push(Arc::new(OpenAIParser::new(config.openai)));
+        }
+
+        // Add ChatGPT parser
+        if config.enable_chatgpt {
+            parsers.push(Arc::new(ChatGPTParser::new(config.chatgpt)));
+        }
+
+        // Add DeepSeek parser
+        if config.enable_deepseek {
+            parsers.push(Arc::new(DeepSeekParser::new(config.deepseek)));
+        }
+
+        // Add Claude parser
+        if config.enable_claude {
+            parsers.push(Arc::new(ClaudeParser::new(config.claude)));
         }
 
         Self { parsers }
@@ -248,11 +284,17 @@ mod tests {
             enable_deterministic: true,
             enable_ollama: true,
             enable_openai: true,
+            enable_chatgpt: true,
+            enable_deepseek: true,
+            enable_claude: true,
             ollama: OllamaConfig::default(),
             openai: crate::config::OpenAIConfig::new("test_key".to_string()),
+            chatgpt: crate::config::ChatGPTConfig::new("test_key".to_string()),
+            deepseek: crate::config::DeepSeekConfig::new("test_key".to_string()),
+            claude: crate::config::ClaudeConfig::new("test_key".to_string()),
         };
 
         let ensemble = ParserEnsemble::new(config);
-        assert_eq!(ensemble.parser_count(), 3);
+        assert_eq!(ensemble.parser_count(), 6);
     }
 }

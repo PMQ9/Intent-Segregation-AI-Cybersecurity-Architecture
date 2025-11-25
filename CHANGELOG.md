@@ -37,6 +37,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Security pipeline now: Binahric Subversion Mantra → Sacrificial Testing → Parser Ensemble → Voting Engine → Comparator → Human Review → Intent Generator → Oathbound Engine → Chronicle
 
 ### Added
+- **Multiple LLM Provider Support** (core/parsers/)
+  - Added ChatGPT parser (`core/parsers/src/chatgpt.rs`)
+    - Uses OpenAI API with gpt-4-turbo by default
+    - Trust level: 0.85 (high)
+    - Supports JSON-structured output extraction
+  - Added DeepSeek parser (`core/parsers/src/deepseek.rs`)
+    - Uses DeepSeek API with deepseek-chat model
+    - Trust level: 0.82 (high)
+    - Supports JSON-structured output extraction
+  - Added Claude parser (`core/parsers/src/claude.rs`)
+    - Uses Anthropic Claude API with claude-3-5-sonnet by default
+    - Trust level: 0.87 (highest)
+    - Uses Anthropic message format for JSON-structured output
+  - Updated `ParserConfig` to include enable flags and configuration for all new parsers
+  - Updated `ParserEnsemble` to run all parsers in parallel with getter methods for each
+  - All parsers load API keys from environment variables (CHATGPT_API_KEY, DEEPSEEK_API_KEY, CLAUDE_API_KEY)
+  - Default models configurable via environment variables (CHATGPT_MODEL, DEEPSEEK_MODEL, CLAUDE_MODEL)
+
 - **Formal Security Analysis** (docs/FORMAL_SECURITY_ANALYSIS.md)
   - Formalized threat model using STRIDE framework, attack trees, and OWASP LLM Top 10
   - Trust boundary analysis and adversary modeling
