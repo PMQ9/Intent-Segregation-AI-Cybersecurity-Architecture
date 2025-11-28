@@ -10,7 +10,9 @@ Ordo Maledictum Promptorum - A Rust-based security system designed to prevent pr
 
 ## Change Documentation
 
-**IMPORTANT**: Whenever you make changes to this codebase, update [CHANGELOG.md](CHANGELOG.md) with a short summary of your changes. Follow the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and categorize changes as:
+**IMPORTANT - Review Before Committing**: Always review all changes before committing. Changes should be staged, reviewed for correctness, and verified to compile/test before being committed to the repository.
+
+**IMPORTANT - Update Changelog**: Whenever you make changes to this codebase, update [CHANGELOG.md](CHANGELOG.md) with a short summary of your changes. Follow the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and categorize changes as:
 - **Added**: New features or files
 - **Changed**: Modifications to existing functionality
 - **Deprecated**: Soon-to-be removed features
@@ -153,15 +155,15 @@ All user inputs follow this sequential validation pipeline:
    - Tests input for signs of corruption/attacks
    - If health checks fail: Quarantine and escalate
 
-3. **The Council of the Oracular Cogitors** (`core/parsers/`) - Multiple independent parsers extract structured intent:
-   - `DeterministicParser`: Rule-based, zero hallucination (trust: 1.0)
-   - `OllamaParser`: Local LLM (trust: 0.75)
-   - `OpenAIParser`: Cloud LLM (trust: 0.8)
+3. **The Council of the Oracular Cogitors** (`core/parsers/`) - Multiple independent LLM parsers extract structured intent from natural language:
+   - `OpenAIParser`: OpenAI GPT models (trust: 0.8)
+   - `DeepSeekParser`: DeepSeek API (trust: 0.82)
+   - `ClaudeParser`: Anthropic Claude (trust: 0.87)
 
-4. **The Voting Engine** (`core/voting/`) - Compare parser outputs, select canonical intent:
+4. **The Voting Engine** (`core/voting/`) - Compare LLM parser outputs, select canonical intent:
    - High Confidence (≥95% similarity): Auto-approve
-   - Low Confidence (75-95%): Use deterministic fallback
-   - Conflict (<75%): Escalate to human
+   - Low Confidence (75-95%): May request user confirmation
+   - Conflict (<75%): Escalate to human review
 
 5. **The Judicator of Concordance** (`core/comparator/`) - Validate against provider policies (The Edict of the High Magister):
    - Check action is in `allowed_actions`
@@ -198,10 +200,10 @@ The ledger is **immutable by design** - database rules prevent UPDATE and DELETE
 ### Key Design Patterns
 
 **Multi-Parser Consensus with Trust Levels:**
-- Each parser has a trust level (deterministic=1.0, LLMs=0.75-0.8)
-- Voting module compares outputs and calculates similarity
-- Deterministic parser is always trusted on conflicts
-- Never rely on a single LLM for security decisions
+- Each LLM parser has a trust level (OpenAI=0.8, DeepSeek=0.82, Claude=0.87)
+- Voting module compares outputs and calculates multi-dimensional similarity
+- Consensus required for high-confidence approval (≥95% similarity)
+- Multiple independent LLMs mitigate individual LLM hallucinations or prompt injection
 
 **Typed Execution Only:**
 - Processing engine NEVER makes free-form LLM calls
@@ -209,12 +211,12 @@ The ledger is **immutable by design** - database rules prevent UPDATE and DELETE
 - This prevents prompt injection in the execution layer
 
 **Defense in Depth:**
-- Layer 1: Malicious detection (regex patterns)
-- Layer 2: Multi-parser validation
-- Layer 3: Consensus voting
-- Layer 4: Policy enforcement
-- Layer 5: Human approval (when needed)
-- Layer 6: Audit logging
+- Layer 1: Sacrificial testing (Vault of the Forbidden Cant - zero-trust input probing on isolated LLM sentries)
+- Layer 2: Multi-LLM parser consensus (3 independent cloud LLMs extract intent from natural language)
+- Layer 3: Weighted voting (≥95% similarity required for auto-approval, <75% escalates)
+- Layer 4: Policy enforcement (validate against provider policies and constraints)
+- Layer 5: Human approval (triggered on conflicts, policy violations, or high-risk operations)
+- Layer 6: Audit logging (immutable ledger of all operations)
 
 **Human-in-the-Loop:**
 - Triggered on parser conflicts, policy violations, or high-risk operations
@@ -251,9 +253,10 @@ Environment variables are loaded from `.env` (copy `.env.example`):
 **Critical settings:**
 - `DATABASE_URL`: PostgreSQL connection
 - `REDIS_HOST`, `REDIS_PORT`: Cache/session storage
-- `ENABLE_DETERMINISTIC`, `ENABLE_OLLAMA`, `ENABLE_OPENAI`: Enable/disable parsers
-- `OLLAMA_ENDPOINT`, `OLLAMA_MODEL`: Local LLM config
-- `OPENAI_API_KEY`, `OPENAI_MODEL`: Cloud LLM config (optional)
+- `ENABLE_OPENAI`, `ENABLE_DEEPSEEK`, `ENABLE_CLAUDE`: Enable/disable LLM parsers
+- `OPENAI_API_KEY`, `OPENAI_MODEL`: OpenAI config (default: gpt-4o-mini)
+- `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`: DeepSeek config (default: deepseek-chat)
+- `CLAUDE_API_KEY`, `CLAUDE_MODEL`: Claude config (default: claude-3-5-sonnet)
 - `ENABLE_HUMAN_APPROVAL`: Enable supervision module
 - `SMTP_*` / `SLACK_*`: Notification configuration
 
@@ -263,15 +266,15 @@ Provider policies are stored in `config/default.toml` and can be loaded at runti
 
 When modifying this codebase:
 
-1. **Never bypass the validation pipeline** - All user inputs must flow through malicious detection → parsers → voting → comparison
+1. **Never bypass the validation pipeline** - All user inputs must flow through: sacrificial testing → LLM parser consensus → voting → policy comparison → (optional) human approval
 
 2. **Preserve ledger immutability** - The `ledger_entries` table has DB rules preventing UPDATE/DELETE. Never circumvent this.
 
-3. **Maintain parser independence** - Parsers must not share state or communicate. They operate in parallel.
+3. **Maintain parser independence** - LLM parsers must not share state or communicate. They operate in parallel and independently.
 
 4. **Use typed execution only** - Never add free-form LLM calls in the processing engine. All actions must be typed functions.
 
-5. **Trust levels are security-critical** - The deterministic parser must always have trust level 1.0. Never lower it.
+5. **Consensus voting is critical** - High-confidence approval requires ≥95% similarity across LLM parsers. Conflicts always escalate to human review. This consensus approach mitigates individual LLM hallucinations.
 
 6. **Provider policies are security boundaries** - The comparator enforces these strictly. Changes to policies require careful review.
 
@@ -301,13 +304,16 @@ Run specific test: `cargo test --test integration test_name`
 
 ## Security Considerations
 
-This is a **security-focused codebase**. When making changes:
+This is a **security-focused codebase with usability-security tradeoffs**. When making changes:
 
 - Assume all user input is adversarial
-- Never trust LLM outputs for security decisions (use consensus + deterministic fallback)
-- All execution paths must be audited in the ledger
+- Never trust a single LLM output - require consensus across multiple independent parsers (≥95% similarity)
+- Sacrificial testing (Vault of the Forbidden Cant) provides zero-trust input validation before parsers
+- All execution paths must be audited in the immutable ledger
 - Provider policies are security boundaries - enforce strictly
-- High-risk operations must support human approval
+- High-risk operations must support human approval (especially on parser conflicts)
+
+**Design Trade-off**: Removed the deterministic rule-based parser to maximize usability (natural language flexibility). This increases reliance on LLM consensus voting and sacrificial testing to detect prompt injection. The Vault of the Forbidden Cant provides defense through isolated, consensus-based threat detection before parsers process the input.
 
 The red-team tests (`tests/redteam/`) contain prompt injection attack scenarios. Run these after any parser or validation changes.
 
@@ -316,8 +322,9 @@ The red-team tests (`tests/redteam/`) contain prompt injection attack scenarios.
 Key external dependencies:
 - **PostgreSQL 15+**: ACID guarantees, JSONB support
 - **Redis 7**: Session storage, rate limiting
-- **Ollama**: Local LLM inference (optional but recommended)
-- **OpenAI API**: Cloud LLM parsing (optional)
+- **OpenAI API**: GPT model parsing (configure with `OPENAI_API_KEY`)
+- **DeepSeek API**: DeepSeek model parsing (configure with `DEEPSEEK_API_KEY`)
+- **Anthropic API**: Claude model parsing (configure with `CLAUDE_API_KEY`)
 
 All Rust dependencies are managed in the workspace `Cargo.toml` with shared versions.
 

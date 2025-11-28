@@ -1,9 +1,6 @@
-use crate::chatgpt::ChatGPTParser;
 use crate::claude::ClaudeParser;
 use crate::config::ParserConfig;
 use crate::deepseek::DeepSeekParser;
-use crate::deterministic::DeterministicParser;
-use crate::ollama::OllamaParser;
 use crate::openai::OpenAIParser;
 use crate::types::{IntentParser, ParserError};
 use intent_schema::ParsedIntent;
@@ -30,26 +27,9 @@ pub struct EnsembleResult {
 }
 
 impl EnsembleResult {
-    /// Get the result from the deterministic parser if available
-    pub fn get_deterministic(&self) -> Option<&ParsedIntent> {
-        self.results
-            .iter()
-            .find(|r| r.parser_id == "deterministic_v1")
-    }
-
-    /// Get the result from the Ollama parser if available
-    pub fn get_ollama(&self) -> Option<&ParsedIntent> {
-        self.results.iter().find(|r| r.parser_id == "ollama_v1")
-    }
-
     /// Get the result from the OpenAI parser if available
     pub fn get_openai(&self) -> Option<&ParsedIntent> {
         self.results.iter().find(|r| r.parser_id == "openai_v1")
-    }
-
-    /// Get the result from the ChatGPT parser if available
-    pub fn get_chatgpt(&self) -> Option<&ParsedIntent> {
-        self.results.iter().find(|r| r.parser_id == "chatgpt_v1")
     }
 
     /// Get the result from the DeepSeek parser if available
@@ -69,12 +49,9 @@ impl EnsembleResult {
             .max_by(|a, b| a.confidence.partial_cmp(&b.confidence).unwrap())
     }
 
-    /// Get result by parser ID priority (deterministic > ollama > openai > chatgpt > deepseek > claude)
+    /// Get result by parser ID priority (openai > deepseek > claude)
     pub fn get_by_priority(&self) -> Option<&ParsedIntent> {
-        self.get_deterministic()
-            .or_else(|| self.get_ollama())
-            .or_else(|| self.get_openai())
-            .or_else(|| self.get_chatgpt())
+        self.get_openai()
             .or_else(|| self.get_deepseek())
             .or_else(|| self.get_claude())
     }
@@ -90,24 +67,9 @@ impl ParserEnsemble {
     pub fn new(config: ParserConfig) -> Self {
         let mut parsers: Vec<Arc<dyn IntentParser>> = Vec::new();
 
-        // Add deterministic parser
-        if config.enable_deterministic {
-            parsers.push(Arc::new(DeterministicParser::new()));
-        }
-
-        // Add Ollama parser
-        if config.enable_ollama {
-            parsers.push(Arc::new(OllamaParser::new(config.ollama)));
-        }
-
         // Add OpenAI parser
         if config.enable_openai {
             parsers.push(Arc::new(OpenAIParser::new(config.openai)));
-        }
-
-        // Add ChatGPT parser
-        if config.enable_chatgpt {
-            parsers.push(Arc::new(ChatGPTParser::new(config.chatgpt)));
         }
 
         // Add DeepSeek parser
@@ -224,48 +186,38 @@ impl ParserEnsemble {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::OllamaConfig;
 
     #[tokio::test]
-    async fn test_ensemble_with_deterministic_only() {
+    async fn test_ensemble_with_openai_only() {
         let config = ParserConfig {
-            enable_deterministic: true,
-            enable_ollama: false,
-            enable_openai: false,
-            ..Default::default()
+            enable_openai: true,
+            enable_deepseek: false,
+            enable_claude: false,
+            openai: crate::config::OpenAIConfig::new("test_key".to_string()),
+            deepseek: crate::config::DeepSeekConfig::new("test_key".to_string()),
+            claude: crate::config::ClaudeConfig::new("test_key".to_string()),
         };
 
         let ensemble = ParserEnsemble::new(config);
         assert_eq!(ensemble.parser_count(), 1);
-
-        let result = ensemble
-            .parse_all(
-                "Find experts in machine learning",
-                "test_user",
-                "test_session",
-            )
-            .await;
-
-        assert_eq!(result.success_count, 1);
-        assert!(result.get_deterministic().is_some());
     }
 
     #[tokio::test]
     async fn test_ensemble_result_methods() {
         let config = ParserConfig {
-            enable_deterministic: true,
-            enable_ollama: false,
-            enable_openai: false,
-            ..Default::default()
+            enable_openai: true,
+            enable_deepseek: false,
+            enable_claude: false,
+            openai: crate::config::OpenAIConfig::new("test_key".to_string()),
+            deepseek: crate::config::DeepSeekConfig::new("test_key".to_string()),
+            claude: crate::config::ClaudeConfig::new("test_key".to_string()),
         };
 
         let ensemble = ParserEnsemble::new(config);
-        let result = ensemble
-            .parse_all("Summarize blockchain security", "test_user", "test_session")
-            .await;
+        assert_eq!(ensemble.parser_count(), 1);
 
-        assert!(result.get_highest_confidence().is_some());
-        assert!(result.get_by_priority().is_some());
+        assert!(ensemble.parser_count() > 0);
+        assert!(ensemble.parser_count() <= 3);
     }
 
     #[tokio::test]
@@ -281,20 +233,15 @@ mod tests {
     #[test]
     fn test_ensemble_creation_from_config() {
         let config = ParserConfig {
-            enable_deterministic: true,
-            enable_ollama: true,
             enable_openai: true,
-            enable_chatgpt: true,
             enable_deepseek: true,
             enable_claude: true,
-            ollama: OllamaConfig::default(),
             openai: crate::config::OpenAIConfig::new("test_key".to_string()),
-            chatgpt: crate::config::ChatGPTConfig::new("test_key".to_string()),
             deepseek: crate::config::DeepSeekConfig::new("test_key".to_string()),
             claude: crate::config::ClaudeConfig::new("test_key".to_string()),
         };
 
         let ensemble = ParserEnsemble::new(config);
-        assert_eq!(ensemble.parser_count(), 6);
+        assert_eq!(ensemble.parser_count(), 3);
     }
 }

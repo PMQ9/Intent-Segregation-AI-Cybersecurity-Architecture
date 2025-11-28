@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Simplified Parser Ensemble** - Removed Rule-Based and Local LLM Parsers
+  - Removed `DeterministicParser`: Rule-based regex/keyword parser that defeated the purpose of using LLMs
+    - Users should leverage LLMs' natural language understanding instead of adhering to rigid syntax
+  - Removed `OllamaParser`: Local LLM inference was too slow for practical use
+  - Removed `ChatGPTParser`: Consolidated OpenAI models into single `OpenAIParser`
+  - **New ensemble**: 3 cloud LLM parsers (OpenAI, DeepSeek, Claude) for robust natural language parsing
+  - Updated `ParserConfig` to remove `enable_deterministic`, `enable_ollama`, `enable_chatgpt` flags
+  - Updated `ParserEnsemble::new()` to only instantiate OpenAI, DeepSeek, and Claude parsers
+  - Updated priority order in `get_by_priority()`: openai > deepseek > claude
+  - **Trade-off**: Without the deterministic parser fallback, the system relies on LLM consensus voting. This increases flexibility for natural language but removes the unhackable rule-based anchor. LLM hallucinations and prompt injection risks must be mitigated through voting consensus and the Vault of the Forbidden Cant (sacrificial testing layer).
+
+### Changed
 - **Project Renamed**: "Intent Segregation Cybersecurity Architecture" → "Ordo Maledictum Promptorum"
   - Updated all documentation files (README.md, CLAUDE.md, ARCHITECTURE.md)
   - Updated Cargo.toml workspace authors
