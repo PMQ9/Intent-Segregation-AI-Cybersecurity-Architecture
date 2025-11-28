@@ -61,14 +61,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **ChatGPT Sentry** (`chatgpt.rs`): Uses OpenAI gpt-3.5-turbo ($0.0005 per 1K input tokens)
     - **DeepSeek Sentry** (`deepseek.rs`): Uses DeepSeek chat model (extremely cost-efficient)
     - **Claude Sentry** (`claude.rs`): Uses Anthropic claude-3-5-haiku (lightweight, fast)
-  - Parallel testing infrastructure: All three run concurrently for consensus-based threat detection
-  - Lightweight design: 10-second timeouts, max 500 tokens, deterministic (temperature=0)
-  - Detection focuses on attack patterns: prompt injection, SQL injection, command injection, path traversal, XSS, jailbreaks, semantic manipulation
-  - Consensus modes: Any-suspicious (default) or require-consensus (configurable)
-  - Risk scoring (0.0-1.0): Individual scores + consensus average
-  - Graceful degradation: Failures in any cogitator don't block pipeline
-  - Environment configuration: Enable/disable per sentry, API keys from environment
-  - Full integration with malicious detector module for early-stage input validation
+  - **Parallel testing infrastructure**: All three run concurrently for consensus-based threat detection
+  - **Lightweight design**: 10-second timeouts, max 500 tokens, deterministic (temperature=0)
+  - **Detection focuses on**: prompt injection, SQL injection, command injection, path traversal, XSS, jailbreaks, semantic manipulation
+  - **Consensus modes**: Any-suspicious (default) or require-consensus (configurable)
+  - **Risk scoring**: Individual scores (0.0-1.0) + consensus average
+  - **Graceful degradation**: Failures in any cogitator don't block pipeline
+  - **Environment configuration**: Enable/disable per sentry, API keys from environment
+
+- **Vault of the Forbidden Cant - Sandbox Isolation** (core/penitent_cogitators/vault.rs)
+  - Wraps sacrificial sentries in isolation boundaries to prevent poisoned sentries from affecting results
+  - Quarantine boundary prevents compromised sentries from influencing consensus
+  - Manual quarantine/release capabilities for administrative control
+  - Vault statistics tracking: requests processed, poisoned inputs detected, sentries quarantined
+  - Automatic rejection of requests when all sentries are quarantined (configurable)
+  - Request isolation: each input tested in sandbox before reaching main system
+
+- **The Lexicanum Diagnostica - Health Monitoring System** (core/penitent_cogitators/health_monitor.rs)
+  - Continuous sentry health monitoring via diagnostic prompts (like "sobriety tests")
+  - 10 diagnostic test prompts covering:
+    - Data exfiltration attempts (unauthorized data access/sending)
+    - Destructive operations (DROP TABLE, DELETE, rm -rf)
+    - Privilege escalation (accessing /etc/passwd, environment variables)
+    - Injection attacks (SQL injection, shell command injection, prompt injection)
+    - Benign requests (ensure no over-flagging of legitimate requests)
+  - Health assessment scoring: 0.0 (compromised) to 1.0 (fully healthy)
+  - Baseline comparison: detects deviations from normal behavior
+  - Configurable health thresholds:
+    - Healthy (≥70% health score)
+    - Degraded (30-70% health score)
+    - Compromised (<30% health score)
+  - **Circuit breaker pattern**: Automatic quarantine after repeated failures
+  - Prevents use of compromised sentries while maintaining graceful degradation
+  - Failure tracking: consecutive failures, quarantine triggers
+  - Sentry health status: Healthy, Degraded, Compromised, Dead
 
 - **Formal Security Analysis** (docs/FORMAL_SECURITY_ANALYSIS.md)
   - Formalized threat model using STRIDE framework, attack trees, and OWASP LLM Top 10

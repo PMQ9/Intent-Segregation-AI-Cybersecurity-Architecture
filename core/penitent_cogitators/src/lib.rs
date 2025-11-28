@@ -50,9 +50,15 @@ pub mod chatgpt;
 pub mod claude;
 pub mod config;
 pub mod deepseek;
+pub mod diagnostics;
 pub mod ensemble;
+pub mod health_monitor;
 pub mod types;
+pub mod vault;
 
 pub use config::CogatorsConfig;
+pub use diagnostics::{DiagnosticCategory, DiagnosticPrompt, SentryHealth, SentryHealthAssessment};
 pub use ensemble::PenitentEnsemble;
+pub use health_monitor::{LexicanumDiagnostica, SentryCircuitBreaker};
 pub use types::{CorruptionConsensus, CogitatorError, CogitatorResult, CogitatorCorruptionTest, SacrificialCogitator};
+pub use vault::{VaultConfig, VaultOfTheForbiddenCant, VaultStatus};
