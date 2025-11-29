@@ -8,6 +8,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **LLM Security Red Team Documentation - November 2025 Updates** (docs/LLM_SECURITY_RED_TEAM_BENCHMARKS.md)
+  - **Part 0: Formal Threat Model** - Complete threat model with black-box, white-box, and indirect injection scenarios
+  - **Meta's Rule of Two Principle** - Architectural compliance verification (≤2 of: private data access, untrusted content, external comms)
+  - **Adaptive Attack Framework (NEW)** - Per Nasr et al. Oct 2025 "The Attacker Moves Second"
+    - RL-based adaptive attacks (32 sessions × 5 rounds)
+    - Search-based optimized attacks (100 iterations with LLM-as-judge)
+    - Data-to-control flow isolation tests
+    - Multi-agent cascade attack tests
+  - **Advanced Benchmarks (NEW)** - Four new standardized benchmarks:
+    - AgentDojo: 100+ realistic agent scenarios (security + utility tradeoff)
+    - BIPIA: Indirect prompt injection attacks (Microsoft)
+    - TaskTracker: 31K sample dataset (statistical validation at scale)
+    - Agent Security Bench (ASB): 10 domains, 400+ tools, 27 attack methods
+  - **New Metrics Suite (NEW)** - Six new security metrics:
+    - Clean Utility (CU): Benign task success rate
+    - Utility Under Attack (U): Task success during attack sessions
+    - Adaptive ASR: Attack success post-optimization (k-robust defense)
+    - Query Budget: Queries needed per successful attack (>100 target)
+    - Token Overhead: Performance cost vs baseline (<3x target)
+    - Pareto Optimality: On security-utility frontier
+  - **Defense Comparisons (NEW)** - Head-to-head analysis of state-of-the-art:
+    - CaMeL (Google DeepMind, March 2025): 67% security, 77% utility
+    - DefensiveTokens (July 2025): 0.24% static ASR BUT 48.8% adaptive ASR
+    - Comprehensive comparison table against SmoothLLM, Task Shield, others
+  - **Three-Tier Success Criteria (NEW)**:
+    - Tier 1 (Competitive): ASR <5%, FRR <10% - deployment-ready
+    - Tier 2 (Publication-Ready): ASR <2%, Adaptive ASR <15% - academic publication
+    - Tier 3 (Best-in-Class): ASR <1%, Adaptive ASR <10% - state-of-the-art
+  - **14-Week Implementation Roadmap** - Phased approach with 7 testing phases (1000+ test cases)
+  - **10 New Research References** - Papers on adaptive attacks, new benchmarks, and state-of-the-art defenses
+  - **Metrics Dashboard Template** - Comprehensive measurement framework with targets
+
 - **Free-form LLM Chat Support in Processing Engine** (core/processing_engine/)
   - Added new `llm_chat` action to The Oathbound Engine for free-form Claude integration
   - Accepts validated intents from The Arbiter of Purpose and executes them as raw prompts to Claude API
