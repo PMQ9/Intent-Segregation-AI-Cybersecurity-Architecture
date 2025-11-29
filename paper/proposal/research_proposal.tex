@@ -10,7 +10,7 @@
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{tikz}
-\usetikzlibrary{shapes,arrows,positioning}
+\usetikzlibrary{shapes,arrows,positioning,fit}
 
 \title{Intent Segregation Cybersecurity Architecture for LLM Systems: \\
 Multi-Layer Defense Through Sacrificial Testing and Consensus Voting}
@@ -143,12 +143,98 @@ The system enforces a \textit{nine-stage security pipeline}:
     \item \textbf{Audit Ledger}: Log full pipeline to immutable, append-only audit trail
 \end{enumerate}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.75\linewidth]{architecture.png}
-    \caption{System Architecture}
-    \label{fig:placeholder}
-\end{figure}
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=0.75\linewidth]{architecture.png}
+%    \caption{System Architecture}
+%    \label{fig:placeholder}
+%\end{figure}
+
+\begin{center}
+\tikzstyle{block} = [rectangle, draw, rounded corners, minimum height=1.0em, minimum width=4.2em, align=center]
+\tikzstyle{dashedblock} = [rectangle, draw, dashed, rounded corners, minimum height=2.0em, minimum width=10em, align=center]
+\tikzstyle{line} = [->, thick]
+\tikzstyle{textnode} = [align=center]
+% Choose here to scale
+\begin{tikzpicture}[node distance=0.7cm, scale=0.9, every node/.style={transform shape, font=\scriptsize}]
+
+% Input
+\node[textnode] (prompt) {INPUT PROMPT};
+
+% Sacrificial LLMs inside sandbox (centered on LLM2)
+\node[dashedblock, minimum width=26em, minimum height=2.5em, below=0.5cm of prompt] (sandbox) {};
+
+% Center LLM
+\node[textnode] (s2) at (sandbox.center) {SACRIFICIAL LLM 2};
+
+% Left and right LLMs (equal distance from center)
+\node[textnode] (s1) at ([xshift=-8.5em]sandbox.center) {SACRIFICIAL LLM 1};
+\node[textnode] (s3) at ([xshift=8.5em]sandbox.center) {SACRIFICIAL LLM 3};
+
+% Label for the box
+\node[textnode, anchor=north east] at (sandbox.south east) {SANDBOX};
+
+
+
+% Health monitor
+\node[block, below=0.6cm of sandbox] (health) {HEALTH MONITOR};
+
+% Intent parsers (centered around p2)
+\node[block, below=0.7cm of health] (p2) {INTENT PARSER 2};
+
+% symmetric left/right placement
+\node[block, left=0.4cm of p2] (p1) {INTENT PARSER 1};
+\node[block, right=0.4cm of p2] (p3) {INTENT PARSER 3};
+
+
+% Voting
+\node[block, below=0.7cm of p2] (vote) {VOTING};
+
+% Intent comparer
+\node[block, below=0.6cm of vote] (compare) {INTENT COMPARER};
+
+\node[textnode, left=1.1cm of compare] (priv) {ELEVATED\\PRIVILEGE REQUEST};
+\node[textnode, right=1.1cm of compare] (config) {SYSTEM INTENT\\CONFIG};
+
+% Trusted intent generator
+\node[block, below=0.7cm of compare] (tig) {TRUSTED INTENT\\GENERATOR};
+
+% Main LLM
+\node[block, below=0.7cm of tig] (main) {MAIN LLM};
+
+% Intent ledger
+\node[textnode, right=1.2cm of tig] (ledger) {INTENT LEDGER};
+
+% Output
+\node[block, below=0.6cm of main] (output) {OUTPUT};
+
+% Connections
+\draw[line] (prompt) -- (sandbox);
+\draw[line] (sandbox) -- (health);
+
+\draw[line] (health) -- (p1);
+\draw[line] (health) -- (p2);
+\draw[line] (health) -- (p3);
+
+\draw[line] (p1) -- (vote);
+\draw[line] (p2) -- (vote);
+\draw[line] (p3) -- (vote);
+
+\draw[line] (vote) -- (compare);
+\draw[line,<->] (priv) -- (compare);
+\draw[line] (config) -- (compare);
+
+\draw[line] (compare) -- (tig);
+\draw[line] (tig) -- (main);
+
+\draw[line,<->] (ledger) -- (main); 
+\draw[line] (tig) -- (ledger);
+
+\draw[line] (main) -- (output);
+
+\end{tikzpicture}
+\end{center}
+
 
 \subsection{Sacrificial Testing Layer (Stage 1)}
 
