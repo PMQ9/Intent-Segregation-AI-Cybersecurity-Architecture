@@ -70,7 +70,7 @@ pub struct ComparisonResult {
 }
 
 /// Privilege elevation event
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ElevationEvent {
     pub requested_at: DateTime<Utc>,
     pub approved_by: Option<String>,
@@ -80,7 +80,7 @@ pub struct ElevationEvent {
 }
 
 /// Processing output
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ProcessingOutput {
     pub success: bool,
     pub result: Option<serde_json::Value>,
@@ -597,23 +597,205 @@ mod tests {
         assert!(!entry.user_input_hash.is_empty());
     }
 
-    // Integration tests require a running PostgreSQL database
-    // Example usage:
-    //
-    // #[tokio::test]
-    // async fn test_ledger_append_and_query() {
-    //     let ledger = IntentLedger::new("postgresql://localhost/test", 5)
-    //         .await
-    //         .unwrap();
-    //     ledger.run_migrations().await.unwrap();
-    //
-    //     let entry = LedgerEntry::new(
-    //         "session123".to_string(),
-    //         "user456".to_string(),
-    //         "Find experts in ML".to_string(),
-    //     );
-    //     let id = ledger.append(entry).await.unwrap();
-    //     let retrieved = ledger.query_by_id(id).await.unwrap();
-    //     assert_eq!(retrieved.id, id);
-    // }
+    #[test]
+    fn test_ledger_entry_hash_consistency() {
+        let entry1 = LedgerEntry::new(
+            "session1".to_string(),
+            "user1".to_string(),
+            "Find experts".to_string(),
+        );
+        let entry2 = LedgerEntry::new(
+            "session1".to_string(),
+            "user1".to_string(),
+            "Find experts".to_string(),
+        );
+
+        assert_eq!(entry1.user_input_hash, entry2.user_input_hash);
+    }
+
+    #[test]
+    fn test_ledger_entry_hash_uniqueness() {
+        let entry1 = LedgerEntry::new(
+            "session1".to_string(),
+            "user1".to_string(),
+            "Find experts".to_string(),
+        );
+        let entry2 = LedgerEntry::new(
+            "session1".to_string(),
+            "user1".to_string(),
+            "Find different experts".to_string(),
+        );
+
+        assert_ne!(entry1.user_input_hash, entry2.user_input_hash);
+    }
+
+    #[test]
+    fn test_ledger_entry_defaults() {
+        let entry = LedgerEntry::new(
+            "session123".to_string(),
+            "user456".to_string(),
+            "Test input".to_string(),
+        );
+
+        assert_eq!(entry.malicious_score, None);
+        assert!(!entry.malicious_blocked);
+        assert_eq!(entry.elevation_event, None);
+        assert_eq!(entry.trusted_intent, None);
+        assert_eq!(entry.processing_output, None);
+        assert_eq!(entry.ip_address, None);
+        assert_eq!(entry.user_agent, None);
+    }
+
+    #[test]
+    fn test_agreement_level_serialization() {
+        let level = AgreementLevel::FullAgreement;
+        let json = serde_json::to_string(&level).unwrap();
+        let deserialized: AgreementLevel = serde_json::from_str(&json).unwrap();
+        assert_eq!(level, deserialized);
+    }
+
+    #[test]
+    fn test_comparator_decision_serialization() {
+        let decision = ComparatorDecision::Approved;
+        let json = serde_json::to_string(&decision).unwrap();
+        let deserialized: ComparatorDecision = serde_json::from_str(&json).unwrap();
+        assert_eq!(decision, deserialized);
+    }
+
+    #[test]
+    fn test_elevation_status_all_variants() {
+        let statuses = vec![
+            ElevationStatus::Pending,
+            ElevationStatus::Approved,
+            ElevationStatus::Denied,
+            ElevationStatus::Timeout,
+        ];
+
+        for status in statuses {
+            let json = serde_json::to_string(&status).unwrap();
+            let deserialized: ElevationStatus = serde_json::from_str(&json).unwrap();
+            assert_eq!(status, deserialized);
+        }
+    }
+
+    #[test]
+    fn test_voting_result_serialization() {
+        let result = VotingResult {
+            agreement_level: AgreementLevel::FullAgreement,
+            confidence: 0.95,
+            canonical_intent: Some(serde_json::json!({"action": "find_experts"})),
+            parser_results: vec![],
+        };
+
+        let json = serde_json::to_string(&result).unwrap();
+        let deserialized: VotingResult = serde_json::from_str(&json).unwrap();
+        assert_eq!(result.agreement_level, deserialized.agreement_level);
+        assert_eq!(result.confidence, deserialized.confidence);
+    }
+
+    #[test]
+    fn test_comparison_result_serialization() {
+        let result = ComparisonResult {
+            decision: ComparatorDecision::Approved,
+            mismatches: vec![],
+            requires_elevation: false,
+            explanation: "OK".to_string(),
+        };
+
+        let json = serde_json::to_string(&result).unwrap();
+        let deserialized: ComparisonResult = serde_json::from_str(&json).unwrap();
+        assert_eq!(result.decision, deserialized.decision);
+        assert_eq!(result.explanation, deserialized.explanation);
+    }
+
+    #[test]
+    fn test_elevation_event_serialization() {
+        let event = ElevationEvent {
+            requested_at: Utc::now(),
+            approved_by: Some("admin".to_string()),
+            approved_at: Some(Utc::now()),
+            status: ElevationStatus::Approved,
+            reason: "Manual review".to_string(),
+        };
+
+        let json = serde_json::to_string(&event).unwrap();
+        let deserialized: ElevationEvent = serde_json::from_str(&json).unwrap();
+        assert_eq!(event.status, deserialized.status);
+        assert_eq!(event.approved_by, deserialized.approved_by);
+    }
+
+    #[test]
+    fn test_processing_output_serialization() {
+        let output = ProcessingOutput {
+            success: true,
+            result: Some(serde_json::json!({"experts": []})),
+            error: None,
+            execution_time_ms: 100,
+        };
+
+        let json = serde_json::to_string(&output).unwrap();
+        let deserialized: ProcessingOutput = serde_json::from_str(&json).unwrap();
+        assert_eq!(output.success, deserialized.success);
+        assert_eq!(output.execution_time_ms, deserialized.execution_time_ms);
+    }
+
+    #[test]
+    fn test_ledger_entry_serialization() {
+        let entry = LedgerEntry::new(
+            "session123".to_string(),
+            "user456".to_string(),
+            "Test input".to_string(),
+        );
+
+        let json = serde_json::to_string(&entry).unwrap();
+        let deserialized: LedgerEntry = serde_json::from_str(&json).unwrap();
+        assert_eq!(entry.id, deserialized.id);
+        assert_eq!(entry.user_input_hash, deserialized.user_input_hash);
+    }
+
+    #[test]
+    fn test_ledger_stats_serialization() {
+        let stats = LedgerStats {
+            total_entries: 100,
+            total_users: 10,
+            total_sessions: 5,
+            blocked_entries: 2,
+            elevation_events: 1,
+            oldest_entry: None,
+            newest_entry: None,
+        };
+
+        let json = serde_json::to_string(&stats).unwrap();
+        let deserialized: LedgerStats = serde_json::from_str(&json).unwrap();
+        assert_eq!(stats.total_entries, deserialized.total_entries);
+        assert_eq!(stats.total_users, deserialized.total_users);
+    }
+
+    #[test]
+    fn test_ledger_entry_with_elevation() {
+        let mut entry = LedgerEntry::new(
+            "session123".to_string(),
+            "user456".to_string(),
+            "Test input".to_string(),
+        );
+
+        entry.elevation_event = Some(ElevationEvent {
+            requested_at: Utc::now(),
+            approved_by: Some("admin".to_string()),
+            approved_at: Some(Utc::now()),
+            status: ElevationStatus::Approved,
+            reason: "Manual approval".to_string(),
+        });
+
+        assert!(entry.elevation_event.is_some());
+        let event = entry.elevation_event.unwrap();
+        assert_eq!(event.status, ElevationStatus::Approved);
+    }
+
+    #[test]
+    fn test_ledger_error_display() {
+        let error = LedgerError::InvalidQuery("Test error".to_string());
+        let msg = error.to_string();
+        assert!(msg.contains("Test error"));
+    }
 }

@@ -420,7 +420,7 @@ impl TrustedIntentGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use intent_schema::{Action, Expertise, ParsedIntent};
+    use intent_schema::{Action, Expertise};
 
     fn create_test_voted_intent() -> VotedIntent {
         VotedIntent {
