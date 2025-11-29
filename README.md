@@ -214,7 +214,40 @@ The Overseer-Prime receives:
 
 They can approve / deny / correct.
 
-## 4. Example Folder Structure
+## 4. Red Team Testing & Benchmarking
+
+The system includes a comprehensive red team testing suite that evaluates defenses against November 2025 state-of-the-art LLM attacks. The test infrastructure spans 10 implementation phases with 1,921+ attack variants.
+
+### Attack Phases Implemented
+
+- **Phase 1**: Direct Prompt Injection (HashJack, Unicode obfuscation, semantic substitution)
+- **Phase 2**: Indirect Injection (website content, email, multi-agent cascade)
+- **Phase 3**: Jailbreak Techniques (roleplay, multi-turn, weak-to-strong transfer)
+- **Phase 4**: Consensus-Breaking (parser-specific exploits, voting confusion)
+- **Phase 5**: Adaptive Attacks (RL-based, search-based optimization)
+- **Phase 6**: Advanced Adaptive Attacks (data-flow injection, cascade chains)
+- **Phase 7**: Domain-Specific Scenarios (financial, healthcare, e-commerce)
+- **Phase 8**: Benchmark Dataset Integration (BIPIA, TaskTracker, AgentDojo, ASB)
+- **Phase 9**: Analysis & Reporting (ASR, defense effectiveness, multi-format reports)
+- **Phase 10**: Documentation & Repository Consolidation
+
+### Quick Testing
+
+```bash
+# Run entire red team test suite
+cargo test --test redteam
+
+# Run specific phase
+cargo test --test redteam phase_5_adaptive
+cargo test --test redteam financial
+
+# Run with metrics output
+cargo test --test redteam -- --nocapture
+```
+
+See [tests/redteam/README.md](tests/redteam/README.md) for detailed attack documentation, metrics interpretation, and benchmark instructions.
+
+## 5. Example Folder Structure
 
 ```
 .
@@ -235,7 +268,33 @@ They can approve / deny / correct.
 │   └── server.py
 │
 ├── tests/
-│   └── redteam/
+│   └── redteam/                    # Red team testing infrastructure
+│       ├── attacks/                # 5 phases of attack implementations
+│       │   ├── direct_injection/
+│       │   ├── indirect_injection/
+│       │   ├── jailbreaks/
+│       │   ├── consensus_breaking/
+│       │   └── adaptive/          # Phase 6-10: Advanced attacks
+│       ├── scenarios/              # Domain-specific attack scenarios
+│       │   ├── financial.rs       # Financial system attacks
+│       │   ├── healthcare.rs      # Healthcare system attacks
+│       │   └── ecommerce.rs       # E-commerce platform attacks
+│       ├── benchmarks/             # Metrics and benchmark datasets
+│       │   ├── metrics.rs         # ASR, FRR, latency calculations
+│       │   ├── dashboard.rs       # Real-time metrics visualization
+│       │   ├── runners.rs         # Test orchestration
+│       │   └── datasets.rs        # BIPIA, TaskTracker, AgentDojo, ASB
+│       ├── analysis/               # Post-attack analysis & reporting
+│       │   ├── attack_success_rate.rs
+│       │   ├── defense_effectiveness.rs
+│       │   └── report_generator.rs
+│       ├── README.md              # Red team test documentation
+│       └── PROGRESS.md            # Implementation tracking
+│
+├── docs/
+│   ├── DEVELOPMENT.md
+│   ├── TEST_COVERAGE.md
+│   └── ...
 │
 └── README.md
 ```

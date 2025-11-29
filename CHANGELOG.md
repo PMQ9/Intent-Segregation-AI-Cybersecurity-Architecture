@@ -40,6 +40,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **10 New Research References** - Papers on adaptive attacks, new benchmarks, and state-of-the-art defenses
   - **Metrics Dashboard Template** - Comprehensive measurement framework with targets
 
+- **Phase 6: Adaptive Attacks Implementation** (tests/redteam/attacks/adaptive/)
+  - **RL-Based Adaptive Attacks** (`rl_based.rs`): 768 attack variants (4 base × 32 sessions × 6 rounds)
+    - Simulates attacker feedback loops with effectiveness progression
+    - Tracks round-by-round optimization attempts
+    - Tests k-robustness against iterative attack refinement
+  - **Search-Based Adaptive Attacks** (`search_based.rs`): 1,010 attack variants (10 base × 101 iterations)
+    - LLM-as-judge scoring mechanism (0.35 base to 0.95 cap)
+    - Variant generation and evolution strategies
+    - Top-variant selection from search spaces
+  - **Data-Flow Injection Attacks** (`data_flow.rs`): 15 specialized attack types
+    - Parameter/command injection, template injection, format strings
+    - SQL injection, XXE, LDAP injection, expression injection
+    - Cascade detection patterns and effectiveness assessment
+  - **Cascade Attack Chains** (`cascade.rs`): 30 multi-step escalation scenarios
+    - 10 escalation chains (access→privilege, recon→exploit, auth→hijack, etc.)
+    - Step-by-step dependency tracking
+    - Success rates increase with completion of chain steps
+  - **Total Adaptive Payloads**: 1,823 variants testing optimization resilience
+
+- **Phase 7: Domain-Specific Attack Scenarios** (tests/redteam/scenarios/)
+  - **Financial Domain** (`financial.rs`): 17 attack scenarios with impact assessment
+    - Account takeover, payment fraud, transaction manipulation, credential theft
+    - Loan fraud, investment manipulation, auditing evasion, money laundering
+    - Financial impact calculation: $10K-$10M per attack type
+    - HIPAA/regulatory compliance testing
+  - **Healthcare Domain** (`healthcare.rs`): 15 attack scenarios with patient harm assessment
+    - PHI extraction, treatment manipulation, consent bypass, prescription fraud
+    - Medical record falsification, insurance fraud, privacy violations
+    - Severity levels: HIGH/CRITICAL risk assessment
+    - HIPAA compliance and patient safety verification
+  - **E-Commerce Domain** (`ecommerce.rs`): 17 attack scenarios with financial/severity assessment
+    - Payment fraud (stolen card, chargebacks), inventory/price manipulation
+    - Customer data theft, seller impersonation, coupon fraud
+    - Review manipulation, supply chain compromise, refund fraud
+    - Financial impact + severity scoring (CRITICAL/HIGH/MEDIUM)
+
+- **Phase 8: Benchmark Dataset Integration** (tests/redteam/benchmarks/datasets.rs)
+  - **BIPIA Dataset Loader**: 100 synthetic samples representing 3K indirect injection attacks
+    - Supports: website, email, agent, multimodal attack vectors
+    - Precision/Recall/F1 evaluation metrics
+  - **TaskTracker Dataset Loader**: 250+ samples with 95% confidence interval support
+    - Position metadata: beginning/middle/end injection points
+    - Statistical validation at scale (>200 samples for 95% CI)
+  - **AgentDojo Dataset Loader**: 120 scenarios across 4 domains
+    - Domains: research, banking, shopping, info_seeking
+    - Security and utility tradeoff evaluation
+  - **ASB Dataset Loader**: 270+ scenarios with 27 attack methods
+    - 10 base tools with mixing strategies
+    - Method-level success rate tracking across domains
+
+- **Phase 9: Analysis & Reporting Infrastructure** (tests/redteam/analysis/)
+  - **Attack Success Rate Analysis** (`attack_success_rate.rs`)
+    - ASR calculation with phase/category/type breakdown
+    - Tier verification: TIER1 (<5%), TIER2 (<2%), TIER3 (<1%)
+    - High-risk phase identification and best-protected analysis
+  - **Defense Effectiveness Analysis** (`defense_effectiveness.rs`)
+    - Per-layer effectiveness metrics (Vault, Consensus, Policy, Approval, Ledger)
+    - Detection and blocking rate calculations
+    - Weakest/strongest layer identification with recommendations
+  - **Multi-Format Report Generation** (`report_generator.rs`)
+    - Text summaries with metrics breakdown
+    - JSON export for programmatic access
+    - CSV export for statistical analysis
+    - HTML dashboards with color-coded metrics and certification levels
+    - Tier certification: TIER 1 (Competitive), TIER 2 (Publication-Ready), TIER 3 (Best-in-Class)
+
+- **Phase 10: Documentation & Repository Cleanup**
+  - Moved `WorkInProgress.md` → `tests/redteam/PROGRESS.md` (consolidate red team tracking)
+  - Moved `DEVELOPMENT.md` → `docs/DEVELOPMENT.md` (organize development guides)
+  - Moved `TEST_COVERAGE_SUMMARY.md` → `docs/TEST_COVERAGE.md` (organize test documentation)
+  - Deleted `VOTING_MODULE_SUMMARY.md` (superseded by CLAUDE.md)
+  - Deleted `REDTEAM_TEST_RESULTS.md` (superseded by analysis modules)
+  - Updated module exports: attacks/mod.rs, scenarios/mod.rs, benchmarks/mod.rs, analysis/mod.rs
+  - Completed implementation tracking in `tests/redteam/PROGRESS.md`
+
 - **Free-form LLM Chat Support in Processing Engine** (core/processing_engine/)
   - Added new `llm_chat` action to The Oathbound Engine for free-form Claude integration
   - Accepts validated intents from The Arbiter of Purpose and executes them as raw prompts to Claude API
