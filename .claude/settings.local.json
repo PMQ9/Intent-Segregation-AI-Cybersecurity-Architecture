@@ -5,7 +5,6 @@
       "Bash(gh pr view:*)",
       "Bash(git rm:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nUpdate ARCHITECTURE.md: Remove Malicious Input Detection stage and renumber pipeline\n\n- Changed SECURITY PIPELINE from 10 STAGES to 9 STAGES\n- Removed entire STAGE 1: MALICIOUS INPUT DETECTION section\n- Renumbered stages 2-9 down to 1-8\n- Updated component names:\n  - Renamed \"Voting Module\" to \"THE VOTING ENGINE\"\n  - Renamed \"Trusted Intent Generation\" to \"THE ARBITER OF PURPOSE\"\n  - Renamed \"The Oathbound Cognitor\" to \"THE OATHBOUND ENGINE\"\n  - Renamed \"Malicious Input Detector\" to \"Vault of the Forbidden Cant\"\n- Updated Security Analysis section to reflect 9-stage pipeline\n- Updated High-Level Architecture diagram with new component names\n- Updated core principles to remove malicious detection references\n\nThis reflects the zero-trust philosophy where ALL inputs are treated as potentially corrupted and tested on sacrificial AI models (The Penitent Cogitators) instead of using fast-path regex filtering.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(done)",
       "Bash(cat:*)",
       "Bash(find core -name \"examples\" -type d -exec bash -c 'echo \"\"=== {} ===\"\" && ls {}' ;)",
@@ -15,7 +14,7 @@
       "Bash(find:*)",
       "Bash(cargo test:*)",
       "Bash(xargs:*)",
-      "Bash(__NEW_LINE__ ls -la d:/open_source_projects/Intent-Segregation-Cybersecurity-Architecture-for-AI/tests/*.rs)"
+      "Bash(SQLX_OFFLINE=true cargo build:*)"
     ],
     "deny": [],
     "ask": []

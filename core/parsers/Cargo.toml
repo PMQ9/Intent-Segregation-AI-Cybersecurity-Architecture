@@ -18,6 +18,7 @@ async-trait = "0.1"
 chrono.workspace = true
 uuid.workspace = true
 md5 = "0.7"
+sha2 = "0.10"
 
 [features]
 default = []

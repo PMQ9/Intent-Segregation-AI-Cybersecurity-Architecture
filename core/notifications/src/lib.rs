@@ -63,12 +63,16 @@
 //! }
 //! ```
 
+pub mod batcher;
 pub mod config;
 pub mod error;
 pub mod service;
 pub mod types;
 
 // Re-export main types for convenience
+pub use batcher::{
+    combine_alerts_to_slack, combine_approvals_to_teams, BatchedNotification, NotificationBatcher,
+};
 pub use config::{EmailConfig, NotificationConfig, SlackConfig, TeamsConfig};
 pub use error::{NotificationError, Result};
 pub use service::NotificationService;

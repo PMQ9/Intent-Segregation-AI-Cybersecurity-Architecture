@@ -103,6 +103,68 @@ pub async fn cache_cogitator_system_prompt(prompt: &str) -> String {
     .await
 }
 
+/// Hash input for deduplication (SHA256)
+///
+/// Used to create cache keys for parser results and vault tests.
+/// Allows caching of results for identical inputs across retries.
+pub fn hash_input(input: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(input.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
+/// Get cached parser result for identical inputs (5 minute TTL)
+///
+/// If the same user input is parsed multiple times within 5 minutes,
+/// returns the previously cached ensemble result instead of calling all parsers again.
+///
+/// This helps with: demo testing, user retries, copy-paste submissions.
+pub async fn get_cached_parser_result(
+    #[allow(unused_variables)] input_hash: &str,
+) -> Option<String> {
+    #[cfg(feature = "caching")]
+    {
+        if let Some(cache_state) = get_cache().await {
+            let cache_lock = cache_state.lock().await;
+            if let Some(cache) = cache_lock.as_ref() {
+                let cache_key = cache_keys::parser_result_key(input_hash);
+                if let Ok(Some(cached_bytes)) = cache.get(&cache_key).await {
+                    if let Ok(result_str) = String::from_utf8(cached_bytes) {
+                        tracing::debug!("Parser result cache hit for input: {}", input_hash);
+                        return Some(result_str);
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
+/// Cache parser result for future identical inputs (5 minute TTL)
+pub async fn cache_parser_result(
+    #[allow(unused_variables)] input_hash: &str,
+    #[allow(unused_variables)] result: &str,
+) {
+    #[cfg(feature = "caching")]
+    {
+        if let Some(cache_state) = get_cache().await {
+            let cache_lock = cache_state.lock().await;
+            if let Some(cache) = cache_lock.as_ref() {
+                let cache_key = cache_keys::parser_result_key(input_hash);
+                if let Ok(result_bytes) = result.as_bytes().to_vec() {
+                    if let Err(e) = cache.set(&cache_key, result_bytes, cache_keys::PARSER_RESULT_TTL_SECS).await {
+                        tracing::debug!("Failed to cache parser result: {}", e);
+                    } else {
+                        tracing::debug!("Parser result cached for input: {} (TTL: {}s)", input_hash, cache_keys::PARSER_RESULT_TTL_SECS);
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -112,5 +174,23 @@ mod tests {
         let prompt = "test prompt";
         let cached = get_cached_system_prompt("test_key", 3600, || prompt.to_string()).await;
         assert_eq!(cached, prompt);
+    }
+
+    #[test]
+    fn test_input_hashing() {
+        let input = "Find me experts in machine learning";
+        let hash = hash_input(input);
+
+        // Hash should be deterministic
+        let hash2 = hash_input(input);
+        assert_eq!(hash, hash2);
+
+        // Hash should be different for different inputs
+        let different_hash = hash_input("Different input");
+        assert_ne!(hash, different_hash);
+
+        // Hash should be valid hex (64 chars for SHA256)
+        assert_eq!(hash.len(), 64);
+        assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
     }
 }

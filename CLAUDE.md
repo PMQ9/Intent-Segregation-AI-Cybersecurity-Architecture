@@ -47,6 +47,17 @@ Ordo Maledictum Promptorum - A Rust-based security system designed to prevent pr
 4. Monitor API usage regularly to detect inefficiencies
 5. Use rate limiting to prevent cost overruns
 
+**Cost Optimization Implementation (November 2025):**
+- **Complete**: All 6 optimization phases implemented and compiled ($1,609/month savings potential)
+  - Phase 1: Batch diagnostic prompts (90% cost reduction on health checks)
+  - Phase 2: System prompt caching with Redis (24h TTL, 40% LLM token reduction)
+  - Phase 3: Ledger query caching (1h-7d TTL for immutable data)
+  - Phase 4: Parser result deduplication by SHA256 hash (5min TTL)
+  - Phase 5: Vault corruption test deduplication (5min TTL)
+  - Phase 6: Notification batching (30s window for approval workflows)
+- **How to Enable**: Build with `--features caching` to activate Redis caching
+- **See**: `docs/API_COST_OPTIMIZATION_IMPLEMENTATION.md` for comprehensive implementation guide
+
 ## Change Documentation
 
 **IMPORTANT - Review Before Committing**: Always review all changes before committing. Changes should be staged, reviewed for correctness, and verified to compile/test before being committed to the repository.

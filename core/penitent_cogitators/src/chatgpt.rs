@@ -1,7 +1,9 @@
+use crate::cache_helper;
 use crate::config::ChatGPTCogitatorConfig;
 use crate::types::{
     CogitatorCorruptionTest, CogitatorError, CogitatorResult, SacrificialCogitator,
 };
+use intent_schema::cache::cache_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 
@@ -80,6 +82,16 @@ Never include any other text."#
             .to_string()
     }
 
+    /// Get cached system prompt (cached in Redis for 24 hours)
+    async fn get_system_prompt_cached(&self) -> String {
+        cache_helper::get_cached_system_prompt(
+            cache_keys::COGITATOR_SYSTEM_PROMPT_KEY,
+            cache_keys::COGITATOR_SYSTEM_PROMPT_TTL_SECS,
+            || self.build_system_prompt(),
+        )
+        .await
+    }
+
     /// Parse the ChatGPT response
     fn parse_response(&self, content: &str) -> Result<CorruptionAnalysis, CogitatorError> {
         serde_json::from_str::<CorruptionAnalysis>(content).map_err(|e| {
@@ -114,13 +126,14 @@ impl SacrificialCogitator for ChatGPTCogitator {
             ));
         }
 
-        // Build request
+        // Build request with cached system prompt
+        let system_prompt = self.get_system_prompt_cached().await;
         let request = ChatGPTRequest {
             model: self.config.model.clone(),
             messages: vec![
                 Message {
                     role: "system".to_string(),
-                    content: self.build_system_prompt(),
+                    content: system_prompt,
                 },
                 Message {
                     role: "user".to_string(),

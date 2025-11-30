@@ -5,6 +5,8 @@ use sqlx::FromRow;
 use thiserror::Error;
 use uuid::Uuid;
 
+pub mod cache_helper;
+
 #[derive(Error, Debug)]
 pub enum LedgerError {
     #[error("Database error: {0}")]
@@ -247,7 +249,10 @@ impl IntentLedger {
     /// This should be called once during application startup to ensure
     /// the database schema is up to date.
     pub async fn run_migrations(&self) -> Result<()> {
-        sqlx::migrate!("./migrations").run(&self.pool).await?;
+        sqlx::migrate!("./migrations")
+            .run(&self.pool)
+            .await
+            .map_err(|e| LedgerError::Database(sqlx::Error::Migrate(Box::new(e))))?;
         Ok(())
     }
 
