@@ -63,18 +63,15 @@ allowed_actions = [
 ]
 
 # List of allowed expertise areas (empty list = all allowed)
-# Valid values: "ml", "security", "embedded", "cloud", "frontend", "backend", "devops", "data"
-allowed_expertise = [
-    "ml",
-    "security",
-    "embedded",
-    "cloud"
-]
+# For math tutoring, expertise areas are not used (empty list)
+allowed_expertise = []
 
-# Maximum budget allowed (in dollars)
-max_budget = 50000
+# Maximum budget allowed (not applicable to math tutoring)
+# Set to None or a high value as budget constraints don't apply to educational queries
+# max_budget = 50000
 
 # Maximum number of results allowed
+# For math tutoring, this controls the number of solution steps or examples returned
 max_results = 20
 
 # Require human approval for all requests (default: false)

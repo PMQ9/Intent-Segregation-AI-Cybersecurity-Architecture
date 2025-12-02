@@ -82,6 +82,38 @@ Ordo Maledictum Promptorum - A Rust-based security system designed to prevent pr
 - Document any new configuration variables or environment setup requirements
 - Keep this file as the source of truth for project knowledge and guidance
 
+## Recent Major Refactoring (December 2025)
+
+**Intent System Simplification - Math Tutoring Platform**
+
+Completed a major refactoring to simplify the intent system from a B2B consulting platform to a math tutoring platform:
+
+- **Removed Actions**: FindExperts, Summarize, DraftProposal, AnalyzeDocument, GenerateReport, SearchKnowledge
+- **Single Action**: MathQuestion (only action in the system now)
+- **Domain Change**: From B2B consulting (finding experts, summarizing documents, drafting proposals) to math tutoring (solving math problems)
+- **Simplified Schema**:
+  - Removed expertise areas (not needed for math questions)
+  - Removed budget constraints (not applicable to math tutoring)
+  - Topics now represent math domains: algebra, calculus, geometry, arithmetic
+
+**Files Updated (15+ files across 3 commits)**:
+- All documentation (README.md, API_DOCUMENTATION.md, MODULE_GUIDE.md, etc.)
+- All code examples (comparator, processing engine, schema, etc.)
+- Test files and fixtures
+- Configuration examples
+
+**Key Changes**:
+- Provider config: `allowed_actions = ["math_question"]`, `allowed_expertise = []`
+- Processing engine now only has `solve_math_question()` function
+- All examples demonstrate math problems: "What is 2 + 2?", "Solve for x: 3x + 5 = 20", etc.
+- Results structure changed from Expert/Document/Proposal types to MathResult with answer, explanation, and step-by-step solutions
+
+**Verification**: Build passes with `cargo build --all` (only warnings, no errors)
+
+**Commits**:
+- 48bac7b: Removed FindExperts/Summarize/DraftProposal references from CONTRIBUTING.md, core/ledger, core/parsers, core/processing_engine, docs/SECURITY.md
+- 77963e5: Complete removal of B2B consulting references from api/, core/comparator/, core/schema/, docs/MODULE_GUIDE.md
+
 ## Build & Run Commands
 
 ### Building
