@@ -4,10 +4,6 @@
 *.pdb
 Cargo.lock
 
-# Environment
-.env
-.env.local
-
 # Database
 *.db
 *.sqlite
@@ -41,5 +37,11 @@ coverage/
 tmp/
 temp/
 
-# Environment files
+# Environment and configuration files
 .env
+.env.local
+.env.*.local
+config/*.toml
+!config/*.example.toml
+*.toml.local
+core/notifications/notifications.toml
