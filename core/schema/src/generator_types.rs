@@ -12,13 +12,7 @@ use crate::ParsedIntent;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum Action {
-    FindExperts,
-    Summarize,
-    DraftProposal,
-    AnalyzeDocument,
-    GenerateReport,
-    SearchKnowledge,
-    LlmChat,
+    MathQuestion,
 }
 
 /// Expertise areas enum
@@ -259,12 +253,12 @@ mod tests {
 
     #[test]
     fn test_action_serialization() {
-        let action = Action::FindExperts;
+        let action = Action::MathQuestion;
         let json = serde_json::to_string(&action).unwrap();
-        assert_eq!(json, "\"find_experts\"");
+        assert_eq!(json, "\"math_question\"");
 
         let deserialized: Action = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized, Action::FindExperts);
+        assert_eq!(deserialized, Action::MathQuestion);
     }
 
     #[test]
@@ -308,7 +302,7 @@ mod tests {
         let intent = TrustedIntent {
             id: uuid::Uuid::new_v4(),
             timestamp: chrono::Utc::now(),
-            action: Action::FindExperts,
+            action: Action::MathQuestion,
             topic_id: "supply_chain_risk".to_string(),
             expertise: vec![Expertise::Security],
             constraints: Constraints::default(),
@@ -327,7 +321,7 @@ mod tests {
         let intent = TrustedIntent {
             id: uuid::Uuid::new_v4(),
             timestamp: chrono::Utc::now(),
-            action: Action::FindExperts,
+            action: Action::MathQuestion,
             topic_id: "this has spaces in it".to_string(), // Invalid!
             expertise: vec![],
             constraints: Constraints::default(),
@@ -346,7 +340,7 @@ mod tests {
         let intent = TrustedIntent {
             id: uuid::Uuid::new_v4(),
             timestamp: chrono::Utc::now(),
-            action: Action::FindExperts,
+            action: Action::MathQuestion,
             topic_id: "valid_topic".to_string(),
             expertise: vec![],
             constraints: Constraints::default(),
@@ -375,12 +369,7 @@ mod tests {
     #[test]
     fn test_all_actions() {
         let actions = vec![
-            Action::FindExperts,
-            Action::Summarize,
-            Action::DraftProposal,
-            Action::AnalyzeDocument,
-            Action::GenerateReport,
-            Action::SearchKnowledge,
+            Action::MathQuestion,
         ];
 
         for action in actions {

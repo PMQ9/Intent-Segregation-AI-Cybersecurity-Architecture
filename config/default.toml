@@ -57,11 +57,9 @@ claude_model = "claude-3-haiku-20240307"
 # ============================================================================
 [provider]
 # List of allowed actions
-# Valid values: "find_experts", "summarize", "draft_proposal"
+# Valid values: "math_question"
 allowed_actions = [
-    "find_experts",
-    "summarize",
-    "draft_proposal"
+    "math_question"
 ]
 
 # List of allowed expertise areas (empty list = all allowed)
