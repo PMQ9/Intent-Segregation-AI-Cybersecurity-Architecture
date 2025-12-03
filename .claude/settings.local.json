@@ -41,7 +41,9 @@
       "Bash(taskkill:*)",
       "Bash(timeout 5 bash:*)",
       "Bash(wmic process where \"name=''''intent-api.exe'''' or name=''''cargo.exe''''\" get processid,caption)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(./target/debug/intent-api.exe:*)"
     ],
     "deny": [],
     "ask": []

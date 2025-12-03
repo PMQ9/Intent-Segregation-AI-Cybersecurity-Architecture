@@ -32,6 +32,7 @@ frontend/build/
 coverage/
 *.profraw
 *.profdata
+tests/e2e/e2e_test_results.json
 
 # Temporary files
 tmp/

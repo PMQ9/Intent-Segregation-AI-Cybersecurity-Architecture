@@ -21,8 +21,8 @@ Created comprehensive end-to-end test infrastructure for testing the full intent
 ### 2. Integration Tests Not Configured in Workspace
 **File**: `Cargo.toml` (root)
 **Problem**: Virtual workspace without root package - `tests/` directory not recognized
-**Workaround**: Created Python-based E2E test runner (`run_e2e_test.py`)
-**Impact**: Rust integration tests in `tests/integration/e2e_metrics_test.rs` cannot be executed via `cargo test`
+**Workaround**: Created Python-based E2E test runner in `tests/e2e/run_e2e_test.py`
+**Impact**: Rust integration tests cannot be executed via `cargo test`, Python tests work successfully
 
 ### 3. API Server Port Configuration - FIXED
 **Files**: `config/default.toml` (line 13), `.env` (line 24)
@@ -35,16 +35,8 @@ Created comprehensive end-to-end test infrastructure for testing the full intent
 
 ## Test Infrastructure Created
 
-### Rust Test (not executable due to workspace config)
-- **File**: `tests/integration/e2e_metrics_test.rs` (554 lines)
-- **Features**:
-  - Full pipeline testing: Parsing → Voting → Policy Comparison
-  - Three scenarios: valid math, injection attack, policy violation
-  - Comprehensive metrics collection
-  - Conservative API usage to minimize costs
-
 ### Python Test Runner (working)
-- **File**: `run_e2e_test.py` (412 lines)
+- **File**: `tests/e2e/run_e2e_test.py` (412 lines)
 - **Features**:
   - REST API client for `/api/process` endpoint
   - Automatic API server startup
@@ -53,12 +45,11 @@ Created comprehensive end-to-end test infrastructure for testing the full intent
 
 ## Files Modified
 
-1. `tests/integration/e2e_metrics_test.rs` - NEW: Rust E2E test suite (554 lines)
-2. `tests/integration/mod.rs` - Added e2e_metrics_test module
-3. `run_e2e_test.py` - NEW: Python E2E test runner (412 lines)
-4. `.env` - Fixed DATABASE_PASSWORD, added APP__SERVER__PORT, fixed TEST_DATABASE_URL
-5. `config/default.toml` - Changed port 3000→8080, enabled Claude parser, added API key
-6. PostgreSQL container - Recreated with fresh volumes for clean authentication
+1. `tests/e2e/run_e2e_test.py` - NEW: Python E2E test runner (412 lines, working)
+2. `tests/integration/mod.rs` - Cleaned up module references
+3. `.env` - Fixed DATABASE_PASSWORD, added APP__SERVER__PORT, fixed TEST_DATABASE_URL
+4. `config/default.toml` - Changed port 3000→8080, enabled Claude parser, added API key
+5. PostgreSQL container - Recreated with fresh volumes for clean authentication
 
 ### 4. Parser Configuration - FIXED
 **File**: `config/default.toml` (lines 42-44, 57)
@@ -80,7 +71,7 @@ Created comprehensive end-to-end test infrastructure for testing the full intent
 **Impact**: Processing engine now successfully executes math questions via Claude API
 
 ### 6. Python Test Script Status Parsing Bug - FIXED
-**File**: `run_e2e_test.py` (lines 232-245)
+**File**: `tests/e2e/run_e2e_test.py` (lines 232-245)
 **Problem**: Script looked for non-existent `approved` field, always returned "PENDING" for successful requests
 **Error**: Scenario 1 showed "PENDING - Requires Human Approval" despite successful execution
 **Fix Applied**:
@@ -94,7 +85,7 @@ Created comprehensive end-to-end test infrastructure for testing the full intent
 **CURRENT STATUS** (December 3, 2025 - After Claude Parser Fix):
 1. PostgreSQL database: ✅ Running on port 5432 with correct credentials
 2. API server: ✅ Starts successfully on port 8080
-3. E2E tests: Execute with `python run_e2e_test.py`
+3. E2E tests: Execute with `python tests/e2e/run_e2e_test.py`
 4. **Test Results - ALL SCENARIOS NOW WORKING**:
    - **Scenario 1 (Valid Math "What is 15 times 7?")**: ✅ **COMPLETED**
      - Parser: ✅ Claude succeeded (confidence 0.95 - high, correctly identified as math)
