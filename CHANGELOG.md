@@ -21,6 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All security defenses remain intact with new legitimate intent context
 
 ### Fixed
+- **E2E Test Configuration Issues** (December 2, 2025)
+  - Fixed port mismatch: Changed config/default.toml port from 3000 to 8080 to match .env and run_e2e_test.py
+  - Added APP__SERVER__PORT=8080 to .env for explicit environment variable override support
+  - Fixed database authentication: Updated TEST_DATABASE_URL password from 'password' to 'intent_pass'
+  - Recreated PostgreSQL container with fresh volumes to clear old authentication state
+  - Enabled Claude parser in config/default.toml (enable_claude = true) for E2E tests
+  - Added Claude API key to default.toml for test execution
+  - E2E tests now successfully execute: Valid math queries go to human approval, injection attacks blocked
 - **API Integration Compilation Errors** (November 2025)
   - Fixed all API compilation errors in api/src/handlers/process.rs
     - Updated parser ensemble calls to use correct signatures (parse_all with user_id and session_id)
