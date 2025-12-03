@@ -22,6 +22,9 @@ import json
 import os
 import sys
 import time
+import signal
+import atexit
+import platform
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 import subprocess
@@ -33,6 +36,42 @@ except ImportError:
     print("ERROR: Required packages not installed.")
     print("Please run: pip install requests python-dotenv")
     sys.exit(1)
+
+
+# Global variable to track server process for cleanup
+_server_process = None
+
+
+def cleanup_api_server():
+    """Cleanup function to ensure API server is terminated"""
+    global _server_process
+    if _server_process:
+        print("\n[CLEANUP] Terminating API server process...")
+        try:
+            _server_process.terminate()
+            _server_process.wait(timeout=5)
+            print("[CLEANUP] API server terminated successfully")
+        except subprocess.TimeoutExpired:
+            print("[CLEANUP] Force killing API server...")
+            _server_process.kill()
+            _server_process.wait()
+        except Exception as e:
+            print(f"[CLEANUP] Error during cleanup: {e}")
+        finally:
+            _server_process = None
+
+
+def signal_handler(signum, frame):
+    """Handle Ctrl+C and other signals gracefully"""
+    print("\n[SIGNAL] Received interrupt signal, cleaning up...")
+    cleanup_api_server()
+    sys.exit(0)
+
+
+# Register cleanup handlers
+atexit.register(cleanup_api_server)
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 
 @dataclass
@@ -291,11 +330,13 @@ def check_api_server():
 
 def start_api_server():
     """Start the API server in the background"""
+    global _server_process
+
     print("\nStarting API server...")
     print("Running: cargo run --bin intent-api")
 
     # Start server in background
-    process = subprocess.Popen(
+    _server_process = subprocess.Popen(
         ["cargo", "run", "--bin", "intent-api"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -307,11 +348,12 @@ def start_api_server():
         time.sleep(1)
         if check_api_server():
             print("[OK] API server is ready")
-            return process
+            return _server_process
         print(f"  Waiting for server to start... ({i+1}/30)")
 
     print("[ERROR] API server failed to start within 30 seconds")
-    process.kill()
+    _server_process.kill()
+    _server_process = None
     return None
 
 
@@ -399,11 +441,9 @@ def main():
 
     print(f"\n[OK] Metrics saved to: {output_file}")
 
-    # Cleanup
-    if server_process:
-        print("\nStopping API server...")
-        server_process.terminate()
-        server_process.wait(timeout=5)
+    # Note: Cleanup is automatically handled by atexit.register(cleanup_api_server)
+    # and signal handlers, but we can also manually cleanup here for immediate effect
+    print("\n[INFO] API server cleanup will be handled automatically on exit")
 
     return 0
 

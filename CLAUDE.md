@@ -132,6 +132,31 @@ cargo build -p intent-parsers
 cargo clean
 ```
 
+**Windows Build Lock Issue - AUTOMATED SOLUTION:**
+
+On Windows, rebuilding can fail with "Access is denied" errors when previous processes hold locks on executables. Use the automated rebuild scripts:
+
+```bash
+# Windows (PowerShell or CMD)
+setup\rebuild_api.bat          # Debug build
+setup\rebuild_api.bat --release # Release build
+
+# Git Bash / Linux / macOS
+bash setup/rebuild_api.sh          # Debug build
+bash setup/rebuild_api.sh --release # Release build
+```
+
+These scripts automatically:
+1. Kill any running `cargo` or `intent-api` processes
+2. Wait for Windows to release file locks (2 second delay)
+3. Run the build command
+4. Report success or failure
+
+**Recommended Development Workflow:**
+- Use `cargo watch -x run` for hot-reload development (avoids repeated builds)
+- Use `setup/rebuild_api.bat` when you need a fresh build
+- The Python E2E test script ([tests/e2e/run_e2e_test.py](tests/e2e/run_e2e_test.py)) now has automatic cleanup handlers (atexit + signal handlers)
+
 ### Running
 ```bash
 # Quick start (runs API + frontend + checks services)
