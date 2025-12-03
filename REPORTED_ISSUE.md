@@ -306,3 +306,28 @@ cargo run --bin intent-api
 # Should print [STARTUP] messages and listen on 0.0.0.0:3000
 ```
 
+---
+
+# Parser/Voting Pipeline Missing Metrics - ⚠️ NEEDS INVESTIGATION
+
+**Date**: December 3, 2025
+**Status**: ⚠️ ACTIVE ISSUE - Tests complete but pipeline metrics missing
+
+## Problem
+
+E2E tests complete successfully with correct answers, but validation pipeline metrics show zeros:
+- Parsers Attempted: 0 (expected: 1)
+- Agreement Level: N/A (expected: HighConfidence/LowConfidence/Conflict)
+- No `parser_results`, `voting_result`, or `comparison_result` in API response
+
+## Security Impact
+
+**CRITICAL**: Without parser consensus (≥95% similarity) and confidence scoring (0.95 = legitimate, 0.25 = injection, 0.15 = out-of-domain), the multi-layer validation pipeline cannot detect attacks or policy violations. Pipeline visibility lost for auditing.
+
+## Investigation Files
+
+1. `api/src/routes/process.rs` - Verify ProcessingResponse struct serialization
+2. `core/processing_engine/src/lib.rs` - Check if parser/voting/comparison stages execute
+3. `tests/e2e/run_e2e_test.py` - Verify metrics extraction from response format
+4. `api/src/state.rs` - Confirm ParserEnsemble initialized with Claude parser
+
